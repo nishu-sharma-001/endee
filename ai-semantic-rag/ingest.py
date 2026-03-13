@@ -1,33 +1,25 @@
 import os
-import sys
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
+import endee
 
-# Link to local SDK
-sys.path.append(os.path.abspath("../python-sdk"))
-from endee_python_sdk import Client
-
-def run_ingestion():
-    pdf_path = "notes.pdf"
-    if not os.path.exists(pdf_path):
-        print("Error: notes.pdf not found!")
-        return
-
-    # 1. Load PDF
+# 1. Load and Chunk PDF
+def ingest_data(pdf_path):
+    print(f"Loading {pdf_path}...")
     loader = PyPDFLoader(pdf_path)
     documents = loader.load()
-
-    # 2. Split text into chunks
+    
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunks = text_splitter.split_documents(documents)
-
-    # 3. Initialize Endee Client and Model
-    client = Client()
+    
+    # 2. Setup Endee Client
+    # Note: Replace with actual Endee connection details if required by their docs
+    client = endee.Client() 
     collection = client.get_or_create_collection(name="academic_notes")
     model = SentenceTransformer('all-MiniLM-L6-v2')
 
-    # 4. Store embeddings in Endee
+    # 3. Insert into Vector DB
     for i, chunk in enumerate(chunks):
         embedding = model.encode(chunk.page_content).tolist()
         collection.insert(
@@ -35,7 +27,11 @@ def run_ingestion():
             embeddings=[embedding],
             metadatas=[{"text": chunk.page_content}]
         )
-    print("✅ Successfully ingested notes into Endee DB!")
+    print(f"Successfully stored {len(chunks)} chunks in Endee Vector DB!")
 
 if __name__ == "__main__":
-    run_ingestion()
+    # Make sure you upload a file named 'notes.pdf' to your repo
+    if os.path.exists("notes.pdf"):
+        ingest_data("notes.pdf")
+    else:
+        print("Error: Please upload a file named 'notes.pdf' first.")
