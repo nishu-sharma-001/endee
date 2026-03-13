@@ -124,3 +124,15 @@ By leveraging the Endee Vector Database for fast vector similarity search, the s
 
 The architecture can scale to support large document collections and can be extended for use cases such as research assistants, enterprise knowledge search, and AI-powered recommendation systems.
 
+## 🔍 Sample Search Output
+
+The following results demonstrate how the AI Assistant retrieves specific coding logic from the uploaded `notes.pdf` using semantic search.
+
+| User Query | Retrieved Logic from Notes | Source File |
+| :--- | :--- | :--- |
+| "How to find factorial?" | `for((i=2;i<=num;i++)) { fact=$((fact*i)) }` | notes.pdf (Page 3) |
+| "Show me a while loop" | `while [ $i -le 90 ] do echo $i ... done` | notes.pdf (Page 3) |
+| "Check positive/negative" | `if [ $num -lt 0 ]; then echo "Negative" ...` | notes.pdf (Page 2) |
+
+**Note:** The system uses the Endee Vector Database to perform high-speed semantic retrieval, ensuring that even if the exact words don't match, the most relevant programming logic is found.
+
