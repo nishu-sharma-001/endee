@@ -1,50 +1,50 @@
 import streamlit as st
 import os
 import sys
+from sentence_transformers import SentenceTransformer
 
-# --- FORCING STREAMLIT TO SEE THE SDK ---
-# Streamlit Cloud mounts your repo at /mount/src/repo_name/
-# We are manually adding that path to Python's memory
+# Adding the local SDK folder to the system path
+sys.path.append(os.path.abspath("../python-sdk"))
+
 try:
-    # This path is where Streamlit Cloud stores your files
-    possible_path = "/mount/src/endee/python-sdk"
-    if os.path.exists(possible_path):
-        sys.path.insert(0, possible_path)
-    
-    # Also adding relative path as a backup
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    backup_path = os.path.abspath(os.path.join(current_dir, "../../python-sdk"))
-    sys.path.insert(0, backup_path)
-
-    # NOW TRY THE IMPORT
     from endee_python_sdk import Client
-    from sentence_transformers import SentenceTransformer
     sdk_ready = True
-except Exception as e:
-    st.error(f"Critical Path Error: {e}")
+except ImportError:
     sdk_ready = False
 
-st.set_page_config(page_title="Academic AI Search", layout="centered")
+# --- UI Setup ---
+st.set_page_config(page_title="Academic AI Assistant", page_icon="📚")
 st.title("📚 Academic AI Assistant")
+st.markdown("Search through your academic notes using Semantic AI.")
 
 if sdk_ready:
+    # Initialize Model and Client
     @st.cache_resource
     def load_resources():
         model = SentenceTransformer('all-MiniLM-L6-v2')
         client = Client()
         return model, client
 
-    model, client = load_resources()
-    collection = client.get_or_create_collection(name="academic_notes")
+    try:
+        model, client = load_resources()
+        collection = client.get_or_create_collection(name="academic_notes")
 
-    query = st.text_input("Ask a question from your notes:")
-    if query:
-        with st.spinner("Searching..."):
-            query_vector = model.encode(query).tolist()
-            results = collection.query(query_embeddings=[query_vector], n_results=1)
-            if results['metadatas'] and len(results['metadatas'][0]) > 0:
-                st.code(results['metadatas'][0][0]['text'], language="bash")
-            else:
-                st.warning("No match found.")
+        # User Query Input
+        query = st.text_input("Ask a question (e.g., How to find factorial?):")
+
+        if query:
+            with st.spinner("Searching..."):
+                # Convert query to vector
+                query_vector = model.encode(query).tolist()
+                # Search in Endee Database
+                results = collection.query(query_embeddings=[query_vector], n_results=1)
+
+                if results['metadatas'] and len(results['metadatas'][0]) > 0:
+                    st.subheader("Match Found in Notes:")
+                    st.code(results['metadatas'][0][0]['text'], language="bash")
+                else:
+                    st.warning("No relevant content found in your notes.")
+    except Exception as e:
+        st.info("💡 Tip: Make sure to run 'ingest.py' first to process your notes.")
 else:
-    st.warning("Please check if 'python-sdk' folder is present in your GitHub root.")
+    st.error("Endee SDK not detected. Please check your folder structure.")
