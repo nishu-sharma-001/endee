@@ -1,26 +1,37 @@
 import streamlit as st
 from sentence_transformers import SentenceTransformer
-import endee
+from endee import Client
 
-st.set_page_config(page_title="Academic AI Search", page_icon="📚")
-st.title("📚 Academic Semantic Search")
-st.markdown("Powered by **Endee Vector Database**")
+st.set_page_config(page_title="Academic AI Assistant", layout="centered")
 
-model = SentenceTransformer('all-MiniLM-L6-v2')
-client = endee.Client()
-collection = client.get_collection(name="academic_notes")
+st.title("📚 Academic AI Assistant")
+st.write("Search through your notes using AI-powered semantic search.")
 
-query = st.text_input("Ask a question from your notes:")
+# Initialize Model and Client
+@st.cache_resource
+def load_resources():
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    client = Client()
+    return model, client
 
-if query:
-    with st.spinner("Searching..."):
-        # Convert query to vector
-        query_vector = model.encode(query).tolist()
-        
-        # Search in Endee
-        results = collection.query(query_embeddings=[query_vector], n_results=3)
-        
-        st.subheader("Relevant Results:")
-        for res in results['metadatas'][0]:
-            st.write(f"📖 {res['text']}")
-            st.divider()
+try:
+    model, client = load_resources()
+    collection = client.get_collection(name="academic_notes")
+
+    # Search UI
+    query = st.text_input("Ask a question from your notes (e.g., How to find factorial?):")
+
+    if query:
+        with st.spinner("Searching..."):
+            query_vector = model.encode(query).tolist()
+            results = collection.query(query_embeddings=[query_vector], n_results=1)
+
+            if results['metadatas'] and len(results['metadatas'][0]) > 0:
+                st.subheader("Match Found:")
+                st.code(results['metadatas'][0][0]['text'], language="bash")
+            else:
+                st.warning("No relevant content found in notes.")
+
+except Exception as e:
+    st.error(f"Setup Error: {e}")
+    st.info("Make sure you have run ingest.py first to store data.")
