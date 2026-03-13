@@ -31,7 +31,6 @@ The retrieved content is then used by an AI model to generate context-aware answ
 ---
 
 ## System Architecture
-
 ![Architecture Diagram](architecture.png)
 
 Academic Documents (PDF / Notes)  
