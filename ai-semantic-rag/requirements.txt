@@ -1,0 +1,7 @@
+langchain
+langchain-community
+sentence-transformers
+pypdf
+endee-python-sdk
+streamlit
+python-dotenv
