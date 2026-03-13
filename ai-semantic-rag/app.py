@@ -1,30 +1,39 @@
 import streamlit as st
 import os
 import sys
-from sentence_transformers import SentenceTransformer
 
-# Link to the local SDK folder (Relative path for Codespaces)
-sys.path.append(os.path.abspath("../python-sdk"))
+# --- FORCING THE PATH ---
+# Streamlit Cloud mounts the repo at /mount/src/endee/
+# We need to point exactly to where the python-sdk is.
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# Going up to project root and then into python-sdk
+sdk_path = os.path.abspath(os.path.join(current_dir, "../../python-sdk"))
+
+if sdk_path not in sys.path:
+    sys.path.insert(0, sdk_path)
 
 try:
-    from endee_python_sdk import Client
+    # After adding __init__.py, this should work
+    from endee_python_sdk import Client 
+    from sentence_transformers import SentenceTransformer
     sdk_ready = True
-except ImportError:
+except Exception as e:
+    st.error(f"Import Error: {e}")
     sdk_ready = False
 
-st.title("📚 Academic AI Search")
+st.set_page_config(page_title="Academic AI Assistant", layout="centered")
+st.title("📚 Academic AI Assistant")
 
 if sdk_ready:
-    model = SentenceTransformer('all-MiniLM-L6-v2')
-    client = Client()
-    collection = client.get_or_create_collection(name="academic_notes")
+    @st.cache_resource
+    def load_resources():
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+        client = Client()
+        return model, client
 
-    query = st.text_input("Search your notes (e.g., Factorial code):")
+    model, client = load_resources()
+    # Your search logic here...
+    query = st.text_input("Ask a question from your notes:")
     if query:
-        query_vector = model.encode(query).tolist()
-        results = collection.query(query_embeddings=[query_vector], n_results=1)
-        
-        if results['metadatas'] and len(results['metadatas'][0]) > 0:
-            st.code(results['metadatas'][0][0]['text'])
-else:
-    st.error("SDK not found. Make sure you are in the ai-semantic-rag folder.")
+        st.write(f"Searching for: {query}")
+        # (Add your search results logic here)
