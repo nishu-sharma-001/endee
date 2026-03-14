@@ -1,14 +1,14 @@
 import streamlit as st
 from sentence_transformers import SentenceTransformer
-import endee
+import chromadb
 
 st.set_page_config(page_title="Academic AI Search", page_icon="📚")
 st.title("📚 Academic Semantic Search")
 st.markdown("Powered by **Endee Vector Database**")
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
-client = endee.Client()
-collection = client.get_collection(name="academic_notes")
+client = chromadb.Client()
+collection = client.get_or_create_collection(name="academic_notes")
 
 query = st.text_input("Ask a question from your notes:")
 
