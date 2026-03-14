@@ -2,6 +2,6 @@ langchain
 langchain-community
 sentence-transformers
 pypdf
-endee-python-sdk
+endee
 streamlit
 python-dotenv
