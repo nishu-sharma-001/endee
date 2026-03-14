@@ -1,7 +1,8 @@
+streamlit
 langchain
 langchain-community
 sentence-transformers
 pypdf
 endee
-streamlit
 python-dotenv
+torch
