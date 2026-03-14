@@ -3,6 +3,7 @@ langchain
 langchain-community
 sentence-transformers
 pypdf
-endee
+chromadb
 python-dotenv
 torch
+
